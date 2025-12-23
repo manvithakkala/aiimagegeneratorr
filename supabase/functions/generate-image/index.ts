@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -31,6 +32,8 @@ serve(async (req) => {
     const formData = new FormData();
     formData.append('prompt', enhancedPrompt);
 
+    console.log('Calling Clipdrop API...');
+
     const response = await fetch('https://clipdrop-api.co/text-to-image/v1', {
       method: 'POST',
       headers: {
@@ -45,10 +48,9 @@ serve(async (req) => {
       throw new Error(`Clipdrop API error: ${response.status} - ${errorText}`);
     }
 
-    // Get the image as a blob and convert to base64
-    const imageBlob = await response.blob();
-    const arrayBuffer = await imageBlob.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    // Get the image as array buffer and convert to base64 safely
+    const arrayBuffer = await response.arrayBuffer();
+    const base64 = base64Encode(arrayBuffer);
     const imageUrl = `data:image/png;base64,${base64}`;
 
     console.log('Image generated successfully');
